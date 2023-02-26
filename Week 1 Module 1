@@ -1,0 +1,80 @@
+#Week 1 Module 1
+#=======================================================================
+#load libraries: FSA and plyr
+library(FSA)
+library(plyr)
+#=======================================================================
+#Import the nhlplayoffs.csv and name the table <Bruins>
+Bruins <- read.csv("nhlplayoffs.csv", header = TRUE)
+#=======================================================================
+#Structure of <Bruins>
+str(Bruins)
+#=======================================================================
+#Summary of <Bruins>
+summary(Bruins)
+#=======================================================================
+#Take a look at the dataset <Bruins>
+headtail(Bruins)
+view(Bruins)
+#=======================================================================
+#data cleaning and structuring
+#Make sure there is no NA in the dataset
+CBruins <- na.omit(Bruins)
+
+#Make sure each years has 16 teams recorded
+CBruins <- CBruins[order(CBruins$rank),] #reorder by rank (for following cleaning execution)
+row.names(CBruins) <- c(1:nrow(CBruins)) #rename row (for following cleaning execution to get the correct row number)
+
+#For loop, if any year's record does not have completed 16 teams, then that year's record will be deleted.
+for (i in levels(as.factor(CBruins$year))) {
+  check <- CBruins[CBruins$year == i,] #get the specific year's dataset
+  if(setequal(check[["rank"]],c(1:16))){#making sure this specific year has exactly 16 teams
+  } else{
+    CBruins <- CBruins[-c(as.numeric(row.names(CBruins[CBruins$year == i,]))),] #delete the rows
+    row.names(CBruins) <- c(1:nrow(CBruins)) #rename row after delete
+  }
+}
+CBruins <- CBruins[order(-CBruins$year),] #reorder by year (original order)
+row.names(CBruins) <- c(1:nrow(CBruins)) #rename row
+#=======================================================================
+#apply appropriate data structure
+str(Bruins)
+#=======================================================================
+#build a frequency table of team
+View(table(CBruins$team))
+#===========================================n============================
+#Plot1 Playoff Appearances Freq of each teams (bar chart)
+#Count the freq of each teams
+ct <- count(CBruins["team"])
+
+#order count from high to low
+ct <- ct[order(-ct$freq),] 
+
+varPar <- par(no.readonly = TRUE) #store default graphical parameters setting and set it as modifiable
+par(mar = c(7, 4, 4, 2) + 0.1) #gives the number of lines of margin to be specified on the four sides of the plot; c(bottom, left, top, right)
+
+b <- barplot(ct$freq, main = "Plot 1: Barplot of Playoff Appearance Count by Team",
+        names.arg = ct$team, xlab = "", ylab = "Counts", col= "#FCB60C",
+        las=2, cex.names = 0.55)
+#set las as perpendicular; set cex.names as 0.55 magnification
+
+axis(side = 1, b[2], las = 2, labels = "Boston Bruins", tick = F, cex.axis = 0.55, col.axis = "red")
+#highlight Boston Bruins
+
+par(varPar) #reset parameters
+#=======================================================================
+#build a histogram of Playoff Appearances Freq
+h <- hist(ct$freq, main = "Plot 2: Histogram of Playoff Appearance Count",
+     xlab = "Playoff Appearances Count", col= "#FCB60C", ylim = c(0,11))
+segments(c(mean(ct$freq),median(ct$freq)),0,c(mean(ct$freq),median(ct$freq)),10, lty = 3, col = "black")
+text(c(mean(ct$freq)+1,median(ct$freq)), 10.4, c("Mean","Median"), col = "black", srt=45)
+#=======================================================================
+#build a cross-tabulation of Top 5 team and rank
+T5T <- ct$team[1:5]
+xtabs(~ team + rank, data = CBruins[CBruins$team %in% T5T,])
+#=======================================================================
+
+
+
+
+
